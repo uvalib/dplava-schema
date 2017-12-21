@@ -116,9 +116,9 @@
             </sch:rule>
           </sch:pattern>
 
-          <!-- dcterms:rights, edm:preview, and edm:isShownAt must contain an absolute URI -->
+          <!-- edm:preview, and edm:isShownAt must contain an absolute URI -->
           <sch:pattern>
-            <sch:rule context="*:rights | *:preview | *:isShownAt">
+            <sch:rule context="*:preview | *:isShownAt">
               <sch:assert test="matches(normalize-space(.), '^([a-z]+://)')">Invalid absolute URI;
                 <sch:name/> must match the pattern "^([a-z]+://)".</sch:assert>
               <!-- Regex can be read as "one or more alphabetic characters, followed by a colon and two slashes." -->
@@ -131,10 +131,21 @@
               <sch:assert role="warning"
                 test="
                   matches(normalize-space(.),
-                  '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text)$', 'i')"
-                >Recommended values are "Collection, Dataset, Event, Image, Interactive Resource,
-                Moving Image, Physical Object, Service, Software, Sound, Still Image, or
-                Text"</sch:assert>
+                  '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text|cartographic|notated music|sound recording|sound recording-musical|sound recording-nonmusical|still image|moving image|three dimensional object|software, multimedia|mixed material)$', 'i')"
+                >DCMI Type Vocabulary values "Collection, Dataset, Event, Image, Interactive Resource,
+                Moving Image, Physical Object, Service, Software, Sound, Still Image, Text" or MODS 
+                typeOfResource values "text, cartographic, notated music, sound recording, sound recording-musical, 
+                sound recording-nonmusical, still image, moving image, three dimensional object, software, multimedia,
+                mixed material" strongly recommended.</sch:assert>
+            </sch:rule>
+          </sch:pattern>
+          
+          <!-- dcterms:rights must match one of the enumerated values -->
+          <sch:pattern>
+            <sch:rule context="*:rights">
+              <sch:assert test="matches(normalize-space(.),
+                '^(http://rightsstatements.org/vocab/InC/1.0/|http://rightsstatements.org/vocab/InC-OW-EU/1.0/|http://rightsstatements.org/vocab/InC-EDU/1.0/|http://rightsstatements.org/vocab/InC-NC/1.0/|http://rightsstatements.org/vocab/InC-RUU/1.0/|http://rightsstatements.org/vocab/NoC-CR/1.0/|http://rightsstatements.org/vocab/NoC-NC/1.0/|http://rightsstatements.org/vocab/NoC-OKLR/1.0/|http://rightsstatements.org/vocab/NoC-US/1.0/|http://rightsstatements.org/vocab/CNE/1.0/|http://rightsstatements.org/vocab/UND/1.0/|http://rightsstatements.org/vocab/NKC/1.0/)$', 'i')"
+                >Vaild RightsStatement.org URI required.</sch:assert>
             </sch:rule>
           </sch:pattern>
 
