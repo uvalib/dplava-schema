@@ -54,7 +54,7 @@
                 test="
                   matches(., '^[\s]{4}$') or
                   matches($dateTime, '^[\|]{4}$') or matches($dateTime, '^[9]{4}$') or
-                  matches($dateTime, '^y-?\d{4,}(~|\?|%)?$') or
+                  matches($dateTime, '^y-?\d{4}(~|\?|%)?$') or
                   matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)-(21|22|23|24)(~|\?|%)?$') or
                   matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(01|03|05|07|08|10|12|uu)(-(0[1-9]|[1-2][0-9]|3[0-1]|uu))?)?(~|\?|%)?$') or
                   matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
@@ -73,7 +73,7 @@
                   matches($dateTime1, '^$') or
                   matches($dateTime1, '^[\|]{4}$') or
                   matches($dateTime1, '^[9]{4}$') or
-                  matches($dateTime1, '^y-?\d{4,}(~|\?|%)?$') or
+                  matches($dateTime1, '^y-?\d{4}(~|\?|%)?$') or
                   matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)-(21|22|23|24)(~|\?|%)?$') or
                   matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)(-(01|03|05|07|08|10|12|uu)(-(0[1-9]|[1-2][0-9]|3[0-1]|uu))?)?(~|\?|%)?$') or
                   matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
@@ -90,7 +90,7 @@
                   matches($dateTime2, '^$') or
                   matches($dateTime2, '^[\|]{4}$') or
                   matches($dateTime2, '^[9]{4}$') or
-                  matches($dateTime2, '^y-?\d{4,}(~|\?|%)?$') or
+                  matches($dateTime2, '^y-?\d{4}(~|\?|%)?$') or
                   matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)-(21|22|23|24)(~|\?|%)?$') or
                   matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)(-(01|03|05|07|08|10|12|uu)(-(0[1-9]|[1-2][0-9]|3[0-1]|uu))?)?(~|\?|%)?$') or
                   matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
