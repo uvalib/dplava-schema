@@ -6,4 +6,14 @@
     <xs:element name="isShownAt" type="xs:anyURI" />
     
     <xs:element name="preview" type="xs:anyURI" />
+
+    <xs:element name="hasType">
+      <xs:complexType>
+          <xs:simpleContent>
+              <xs:extension base="xs:string">
+                  <xs:attribute name="valueURI" type="xs:anyURI" use="optional" />
+              </xs:extension>
+          </xs:simpleContent>
+      </xs:complexType>
+    </xs:element>
 </xs:schema>

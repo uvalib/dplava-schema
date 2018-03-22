@@ -220,6 +220,7 @@
                     <xs:element ref="dcterms:bibliographicCitation" />-->
           <xs:element ref="edm:isShownAt"/>
           <xs:element ref="edm:preview"/>
+          <xs:element ref="edm:hasType"/>
         </xs:choice>
       </xs:sequence>
     </xs:complexType>
