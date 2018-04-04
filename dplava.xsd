@@ -2,7 +2,7 @@
 <?xml-model href="percent.xsd" type="application/xml" 
             schematypens="http://purl.oclc.org/dsdl/schematron"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://dplava.lib.virginia.edu/dplava/v1"
+  targetNamespace="http://dplava.lib.virginia.edu"
   xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"
   xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:edm="http://www.europeana.eu/schemas/edm/"
   elementFormDefault="qualified" attributeFormDefault="unqualified">
@@ -60,7 +60,7 @@
                   matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
                   matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(02|uu)(-(0[1-9]|[1-2][0-9]|uu))?)?(~|\?|%)?$') or
                   matches($dateTime, '^[1-9]\d{3}-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2][0-9]|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2][0-9]|30))|((02)(-(0[1-9]|[1-2][0-9])))))(T([01][0-9]|2[0-3]):([0-5][0-9])([\.,]\d+)?(:([0-5][0-9]|60)([\.,]\d+)?)?(Z|(\+|-)([01][0-9]|2[0-3])((:[0-5][0-9]([\.,]\d+)?)(:[0-5][0-9]([\.,]\d+)?)?)?)?)?$')"
-                >Warning: dates must be in ETDF</sch:assert>
+                >Warning: dates must be in EDTF</sch:assert>
               <sch:assert role="warning" test="not(matches($dateTime, '^-0+$'))">Warning: Suspect
                 value, please verify.</sch:assert>
             </sch:rule>
@@ -145,7 +145,7 @@
             <sch:rule context="*:rights">
               <sch:assert test="matches(normalize-space(.),
                 '^(http://rightsstatements.org/vocab/InC/1.0/|http://rightsstatements.org/vocab/InC-OW-EU/1.0/|http://rightsstatements.org/vocab/InC-EDU/1.0/|http://rightsstatements.org/vocab/InC-NC/1.0/|http://rightsstatements.org/vocab/InC-RUU/1.0/|http://rightsstatements.org/vocab/NoC-CR/1.0/|http://rightsstatements.org/vocab/NoC-NC/1.0/|http://rightsstatements.org/vocab/NoC-OKLR/1.0/|http://rightsstatements.org/vocab/NoC-US/1.0/|http://rightsstatements.org/vocab/CNE/1.0/|http://rightsstatements.org/vocab/UND/1.0/|http://rightsstatements.org/vocab/NKC/1.0/)$', 'i')"
-                >Vaild RightsStatement.org URI required.</sch:assert>
+                >Valid RightsStatement.org URI required.</sch:assert>
             </sch:rule>
           </sch:pattern>
 
@@ -154,6 +154,13 @@
             <sch:rule context="*:type[matches(., 'Text', 'i')]">
               <sch:assert test="../*:language">A language element is required when <sch:name/>
                 matches "Text".</sch:assert>
+            </sch:rule>
+          </sch:pattern>
+          
+          <!-- No empty attribute values permitted -->
+          <sch:pattern>
+            <sch:rule context="//@*">
+              <sch:assert test="normalize-space(.) != ''">No empty attribute values permitted</sch:assert>
             </sch:rule>
           </sch:pattern>
 

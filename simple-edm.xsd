@@ -2,18 +2,18 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.w3.org/2001/XMLSchema"
     targetNamespace="http://www.europeana.eu/schemas/edm/"
     xmlns:edm="http://www.europeana.eu/schemas/edm/" elementFormDefault="qualified">
-    
-    <xs:element name="isShownAt" type="xs:anyURI" />
-    
-    <xs:element name="preview" type="xs:anyURI" />
+
+    <xs:element name="isShownAt" type="xs:anyURI"/>
+
+    <xs:element name="preview" type="xs:anyURI"/>
 
     <xs:element name="hasType">
-      <xs:complexType>
-          <xs:simpleContent>
-              <xs:extension base="xs:string">
-                  <xs:attribute name="valueURI" type="xs:anyURI" use="optional" />
-              </xs:extension>
-          </xs:simpleContent>
-      </xs:complexType>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute name="valueURI" type="anyURI"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
     </xs:element>
 </xs:schema>
