@@ -33,6 +33,7 @@
                 required.</sch:assert>
               <sch:assert test="*:preview">At least one edm:preview element is
                 required.</sch:assert>
+              <sch:assert test="count(*:identifier) = 1">Exactly one identifier element is required</sch:assert>
             </sch:rule>
           </sch:pattern>
           
