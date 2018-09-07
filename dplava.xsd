@@ -132,12 +132,9 @@
               <sch:assert role="warning"
                 test="
                   matches(normalize-space(.),
-                  '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text|cartographic|notated music|sound recording|sound recording-musical|sound recording-nonmusical|still image|moving image|three dimensional object|software, multimedia|mixed material)$', 'i')"
+                  '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text)$', 'i')"
                 >DCMI Type Vocabulary values "Collection, Dataset, Event, Image, Interactive Resource,
-                Moving Image, Physical Object, Service, Software, Sound, Still Image, Text" or MODS 
-                typeOfResource values "text, cartographic, notated music, sound recording, sound recording-musical, 
-                sound recording-nonmusical, still image, moving image, three dimensional object, software, multimedia,
-                mixed material" strongly recommended.</sch:assert>
+                Moving Image, Physical Object, Service, Software, Sound, Still Image, Text" strongly recommended.</sch:assert>
             </sch:rule>
           </sch:pattern>
           
