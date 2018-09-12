@@ -146,14 +146,6 @@
                 >Valid RightsStatement.org URI required.</sch:assert>
             </sch:rule>
           </sch:pattern>
-
-          <!-- dcterms:language required when dcterms:type matches "Text" -->
-          <sch:pattern>
-            <sch:rule context="*:type[matches(., 'Text', 'i')]">
-              <sch:assert test="../*:language">A language element is required when <sch:name/>
-                matches "Text".</sch:assert>
-            </sch:rule>
-          </sch:pattern>
           
           <!-- No empty attribute values permitted -->
           <sch:pattern>
