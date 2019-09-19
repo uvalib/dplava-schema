@@ -1,159 +1,222 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-model href="percent.xsd" type="application/xml" 
-            schematypens="http://purl.oclc.org/dsdl/schematron"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://dplava.lib.virginia.edu"
-  xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"
-  xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:edm="http://www.europeana.eu/schemas/edm/"
-  elementFormDefault="qualified" attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+  targetNamespace="http://www.lib.virginia.edu/ns/dpla"
+  xmlns:dpla="http://www.lib.virginia.edu/ns/dpla" xmlns:sch="http://purl.oclc.org/dsdl/schematron">
 
-  <xs:import namespace="http://purl.org/dc/terms/" schemaLocation="dcterms.xsd"/>
-  <xs:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="dc.xsd"/>
-  <xs:import namespace="http://www.europeana.eu/schemas/edm/" schemaLocation="simple-edm.xsd"/>
+  <!-- someXML allows any elements that claim to be from the dcterms or edm namespaces -->
+  <xs:group name="someXML">
+    <xs:sequence>
+      <xs:choice>
+        <xs:any namespace="http://purl.org/dc/terms/" processContents="strict"/>
+        <xs:any namespace="http://www.europeana.eu/schemas/edm/" processContents="lax"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:group>
 
+  <!-- An individual metadata record -->
   <xs:element name="mdRecord">
     <xs:complexType>
-      <xs:annotation>
-        <xs:documentation xml:lang="en"> The mdRecord element may contain any dcterms field as well
-          as two custom URI fields that a roughly equivalent to Europeana's isShownAt and "preview"
-          elements. </xs:documentation>
-        <xs:appinfo>
-          
-          <!-- Check DPLA requirements for mdRecord -->
-          <sch:ns prefix="dcterms" uri="http://purl.org/dc/terms/"/>
-          <sch:ns prefix="dc" uri="http://purl.org/dc/elements/1.1/"/>
-          <sch:ns prefix="edm" uri="http://www.europeana.eu/schemas/edm/"/>
-          <sch:pattern>
-            <sch:rule context="*:mdRecord">
-              <sch:assert test="*:provenance">At least one provenance element is
-                required.</sch:assert>
-              <sch:assert test="*:rights">At least one rights element is required.</sch:assert>
-              <sch:assert test="*:title">At least one title element is required.</sch:assert>
-              <sch:assert test="*:isShownAt">At least one edm:isShownAt element is
-                required.</sch:assert>
-              <sch:assert test="*:preview">At least one edm:preview element is
-                required.</sch:assert>
-              <sch:assert test="count(*:identifier) = 1">Exactly one identifier element is required</sch:assert>
-            </sch:rule>
-          </sch:pattern>
-          
-          <!-- Descriptive elements must have textual content -->
-          <sch:pattern>
-            <sch:rule context="dcterms:* | edm:*">
-              <sch:assert test="not(normalize-space(.) eq '')"><sch:name/> must have
-                content.</sch:assert>
-            </sch:rule>
-          </sch:pattern>
-          
-          <!-- dcterms:created should comply with level 1 of the Extend Date Time Format (EDTF). -->
-          <!-- See http://www.loc.gov/standards/datetime/ISO_DIS%208601-2.pdf for format details. -->
-          <!-- Some MARC values are also allowed to facilitate conversion from existing MARC records. -->
-          
-
-          <!-- edm:preview, and edm:isShownAt must contain an absolute URI -->
-          <sch:pattern>
-            <sch:rule context="*:preview | *:isShownAt">
-              <sch:assert test="matches(normalize-space(.), '^([a-z]+://)')">Invalid absolute URI;
-                <sch:name/> must match the pattern "^([a-z]+://)".</sch:assert>
-              <!-- Regex can be read as "one or more alphabetic characters, followed by a colon and two slashes." -->
-            </sch:rule>
-          </sch:pattern>
-
-          <!-- dcterms:type must match one of the enumerated values -->
-          <sch:pattern>
-            <sch:rule context="*:type">
-              <sch:assert role="warning"
-                test="
-                  matches(normalize-space(.),
-                  '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text)$', 'i')"
-                >DCMI Type Vocabulary values "Collection, Dataset, Event, Image, Interactive Resource,
-                Moving Image, Physical Object, Service, Software, Sound, Still Image, Text" strongly recommended.</sch:assert>
-            </sch:rule>
-          </sch:pattern>
-          
-          <!-- dcterms:rights must match one of the enumerated values -->
-          <sch:pattern>
-            <sch:rule context="*:rights">
-              <sch:assert test="matches(normalize-space(.),
-                '^(http://rightsstatements.org/vocab/InC/1.0/|http://rightsstatements.org/vocab/InC-OW-EU/1.0/|http://rightsstatements.org/vocab/InC-EDU/1.0/|http://rightsstatements.org/vocab/InC-NC/1.0/|http://rightsstatements.org/vocab/InC-RUU/1.0/|http://rightsstatements.org/vocab/NoC-CR/1.0/|http://rightsstatements.org/vocab/NoC-NC/1.0/|http://rightsstatements.org/vocab/NoC-OKLR/1.0/|http://rightsstatements.org/vocab/NoC-US/1.0/|http://rightsstatements.org/vocab/CNE/1.0/|http://rightsstatements.org/vocab/UND/1.0/|http://rightsstatements.org/vocab/NKC/1.0/)$', 'i')"
-                >Valid RightsStatement.org URI required.</sch:assert>
-            </sch:rule>
-          </sch:pattern>
-          
-          <!-- No empty attribute values permitted -->
-          <sch:pattern>
-            <sch:rule context="//@*">
-              <sch:assert test="normalize-space(.) != ''">No empty attribute values permitted</sch:assert>
-            </sch:rule>
-          </sch:pattern>
-
-        </xs:appinfo>
-      </xs:annotation>
-
-      <xs:sequence>
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:element ref="dcterms:title"/>
-          <xs:element ref="dcterms:creator"/>
-          <xs:element ref="dcterms:subject"/>
-          <xs:element ref="dcterms:description"/>
-          <xs:element ref="dcterms:publisher"/>
-          <xs:element ref="dcterms:contributor"/>
-          <xs:element ref="dcterms:date"/>
-          <xs:element ref="dcterms:type"/>
-          <xs:element ref="dcterms:format"/>
-          <xs:element ref="dcterms:identifier"/>
-          <xs:element ref="dcterms:source"/>
-          <xs:element ref="dcterms:language"/>
-          <xs:element ref="dcterms:relation"/>
-          <xs:element ref="dcterms:coverage"/>
-          <xs:element ref="dcterms:rights"/>
-
-          <!--<xs:element ref="dcterms:alternative" />
-                    <xs:element ref="dcterms:tableOfContents" />
-                    <xs:element ref="dcterms:abstract" />
-                    <xs:element ref="dcterms:created" />
-                    <xs:element ref="dcterms:valid" />
-                    <xs:element ref="dcterms:available" />
-                    <xs:element ref="dcterms:issued" />
-                    <xs:element ref="dcterms:modified" />
-                    <xs:element ref="dcterms:dateAccepted" />
-                    <xs:element ref="dcterms:dateCopyrighted" />
-                    <xs:element ref="dcterms:dateSubmitted" />
-                    <xs:element ref="dcterms:extent" />
-                    <xs:element ref="dcterms:medium" />
-                    <xs:element ref="dcterms:isVersionOf" />
-                    <xs:element ref="dcterms:hasVersion" />
-                    <xs:element ref="dcterms:isReplacedBy" />
-                    <xs:element ref="dcterms:replaces" />
-                    <xs:element ref="dcterms:isRequiredBy" />
-                    <xs:element ref="dcterms:requires" />
-                    <xs:element ref="dcterms:isPartOf" />
-                    <xs:element ref="dcterms:hasPart" />
-                    <xs:element ref="dcterms:isReferencedBy" />
-                    <xs:element ref="dcterms:references" />
-                    <xs:element ref="dcterms:isFormatOf" />
-                    <xs:element ref="dcterms:hasFormat" />
-                    <xs:element ref="dcterms:conformsTo" />
-                    <xs:element ref="dcterms:spatial" />
-                    <xs:element ref="dcterms:temporal" /> -->
-          <xs:element ref="dcterms:audience"/>
-          <xs:element ref="dcterms:accrualMethod"/>
-          <xs:element ref="dcterms:accrualPeriodicity"/>
-          <xs:element ref="dcterms:accrualPolicy"/>
-          <xs:element ref="dcterms:instructionalMethod"/>
-          <xs:element ref="dcterms:provenance"/>
-          <xs:element ref="dcterms:rightsHolder"/>
-          <!--<xs:element ref="dcterms:mediator" />
-                    <xs:element ref="dcterms:educationLevel" />
-                    <xs:element ref="dcterms:accessRights" />
-                    <xs:element ref="dcterms:license" />
-                    <xs:element ref="dcterms:bibliographicCitation" />-->
-          <xs:element ref="edm:isShownAt"/>
-          <xs:element ref="edm:preview"/>
-          <xs:element ref="edm:hasType"/>
-        </xs:choice>
-      </xs:sequence>
+      <xs:group maxOccurs="unbounded" ref="dpla:someXML"/>
     </xs:complexType>
   </xs:element>
+
+  <!-- * Embedded Schematron * -->
+  <!-- Schematron namespace declarations -->
+  <xs:annotation>
+    <xs:appinfo>
+      <ns xmlns="http://purl.oclc.org/dsdl/schematron" prefix="dcterms"
+        uri="http://purl.org/dc/terms/"/>
+      <ns xmlns="http://purl.oclc.org/dsdl/schematron" prefix="edm"
+        uri="http://www.europeana.eu/schemas/edm/"/>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- Check DPLA requirements for mdRecord -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="*:mdRecord">
+          <sch:assert test="dcterms:provenance">At least one dcterms:provenance element is
+            required.</sch:assert>
+          <sch:assert test="dcterms:rights">At least one dcterms:rights element is
+            required.</sch:assert>
+          <sch:assert test="dcterms:title">At least one dcterms:title element is
+            required.</sch:assert>
+          <sch:assert test="edm:isShownAt">At least one edm:isShownAt element is
+            required.</sch:assert>
+          <sch:assert test="edm:preview">At least one edm:preview element is required.</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- Check dcterms elements -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="dcterms:*">
+          <!-- Allow only actual dcterms elements -->
+          <!--<sch:assert
+            test="
+              matches(local-name(),
+              '^(abstract|accessRights|accrualMethod|accrualPeriodicity|accrualPolicy|alternative|audience|available|bibliographicCitation|conformsTo|contributor|coverage|created|creator|date|dateAccepted|dateCopyrighted|dateSubmitted|description|educationLevel|extent|format|hasFormat|hasPart|hasVersion|identifier|instructionalMethod|isFormatOf|isPartOf|isReferencedBy|isReplacedBy|isRequiredBy|issued|isVersionOf|language|license|mediator|medium|modified|provenance|publisher|references|relation|replaces|requires|rights|rightsHolder|source|spatial|subject|tableOfContents|temporal|title|type|valid)$')"
+            ><sch:name/> not permitted; only abstract, accessRights, accrualMethod,
+            accrualPeriodicity, accrualPolicy, alternative, audience, available,
+            bibliographicCitation, conformsTo, contributor, coverage, created, creator, date,
+            dateAccepted, dateCopyrighted, dateSubmitted, description, educationLevel, extent,
+            format, hasFormat, hasPart, hasVersion, identifier, instructionalMethod, isFormatOf,
+            isPartOf, isReferencedBy, isReplacedBy, isRequiredBy, issued, isVersionOf, language,
+            license, mediator, medium, modified, provenance, publisher, references, relation,
+            replaces, requires, rights, rightsHolder, source, spatial, subject, tableOfContents,
+            temporal, title, type, or valid elements are allowed.</sch:assert>-->
+          <!-- Elements must have textual content -->
+          <sch:assert test="text()"><sch:name/> must have content.</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- Check edm elements -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="edm:*">
+          <!-- Allow only actual edm elements -->
+          <sch:assert test="matches(local-name(), '^(isShownAt|preview)$')"><sch:name/> not
+            permitted; only isShownAt and preview elements are allowed.</sch:assert>
+          <!-- Elements must have textual content -->
+          <sch:assert test="text()"><sch:name/> must have content.</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- dcterms:created should comply with level 1 of the Extend Date Time Format (EDTF). -->
+  <!-- See http://www.loc.gov/standards/datetime/ISO_DIS%208601-2.pdf for format details. -->
+  <!-- Some MARC values are also allowed to facilitate conversion from existing MARC records. -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="dcterms:created[not(matches(., '/'))]">
+          <sch:let name="dateTime" value="replace(., '\s', '')"/>
+          <sch:assert role="warning"
+            test="
+              matches(., '^[\s]{4}$') or
+              matches($dateTime, '^[\|]{4}$') or matches($dateTime, '^[9]{4}$') or
+              matches($dateTime, '^y-?\d{4,}(~|\?|%)?$') or
+              matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)-(21|22|23|24)(~|\?|%)?$') or
+              matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(01|03|05|07|08|10|12|uu)(-(0[1-9]|[1-2][0-9]|3[0-1]|uu))?)?(~|\?|%)?$') or
+              matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
+              matches($dateTime, '^-?\d{2}(\d{2}|uu|\du)(-(02|uu)(-(0[1-9]|[1-2][0-9]|uu))?)?(~|\?|%)?$') or
+              matches($dateTime, '^[1-9]\d{3}-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2][0-9]|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2][0-9]|30))|((02)(-(0[1-9]|[1-2][0-9])))))(T([01][0-9]|2[0-3]):([0-5][0-9])([\.,]\d+)?(:([0-5][0-9]|60)([\.,]\d+)?)?(Z|(\+|-)([01][0-9]|2[0-3])((:[0-5][0-9]([\.,]\d+)?)(:[0-5][0-9]([\.,]\d+)?)?)?)?)?$')"
+            >Warning: Suspect value, please verify.</sch:assert>
+          <sch:assert role="warning" test="not(matches($dateTime, '^-0+$'))">Warning: Suspect value,
+            please verify.</sch:assert>
+        </sch:rule>
+        <sch:rule context="dcterms:created[matches(., '/')]">
+          <sch:let name="dateTime1" value="substring-before(replace(., '\s', ''), '/')"/>
+          <sch:let name="dateTime2" value="substring-after(replace(., '\s', ''), '/')"/>
+          <sch:assert role="warning"
+            test="
+              matches($dateTime1, '^\.\.$') or
+              matches($dateTime1, '^$') or
+              matches($dateTime1, '^[\|]{4}$') or
+              matches($dateTime1, '^[9]{4}$') or
+              matches($dateTime1, '^y-?\d{4,}(~|\?|%)?$') or
+              matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)-(21|22|23|24)(~|\?|%)?$') or
+              matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)(-(01|03|05|07|08|10|12|uu)(-(0[1-9]|[1-2][0-9]|3[0-1]|uu))?)?(~|\?|%)?$') or
+              matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
+              matches($dateTime1, '^-?\d{2}(\d{2}|uu|\du)(-(02|uu)(-(0[1-9]|[1-2][0-9]|uu))?)?(~|\?|%)?$') or
+              matches($dateTime1, '^[1-9]\d{3}-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2][0-9]|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2][0-9]|30))|((02)(-(0[1-9]|[1-2][0-9])))))(T([01][0-9]|2[0-3]):([0-5][0-9])([\.,]\d+)?(:([0-5][0-9]|60)([\.,]\d+)?)?(Z|(\+|-)([01][0-9]|2[0-3])((:[0-5][0-9]([\.,]\d+)?)(:[0-5][0-9]([\.,]\d+)?)?)?)?)?$')"
+            >Warning: Start of range '<sch:value-of select="$dateTime1"/>' suspect value, please
+            verify.</sch:assert>
+          <sch:assert role="warning" test="not(matches($dateTime1, '^-0+$'))">Warning: Start of
+            range '<sch:value-of select="$dateTime1"/>' suspect value, please verify.</sch:assert>
+          <sch:assert role="warning"
+            test="
+              matches($dateTime2, '^\.\.$') or
+              matches($dateTime2, '^$') or
+              matches($dateTime2, '^[\|]{4}$') or
+              matches($dateTime2, '^[9]{4}$') or
+              matches($dateTime2, '^y-?\d{4,}(~|\?|%)?$') or
+              matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)-(21|22|23|24)(~|\?|%)?$') or
+              matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)(-(01|03|05|07|08|10|12|uu)(-(0[1-9]|[1-2][0-9]|3[0-1]|uu))?)?(~|\?|%)?$') or
+              matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)(-(04|06|09|11|uu)(-(0[1-9]|[1-2][0-9]|30|uu))?)?(~|\?|%)?$') or
+              matches($dateTime2, '^-?\d{2}(\d{2}|uu|\du)(-(02|uu)(-(0[1-9]|[1-2][0-9]|uu))?)?(~|\?|%)?$') or
+              matches($dateTime2, '^[1-9]\d{3}-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2][0-9]|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2][0-9]|30))|((02)(-(0[1-9]|[1-2][0-9])))))(T([01][0-9]|2[0-3]):([0-5][0-9])([\.,]\d+)?(:([0-5][0-9]|60)([\.,]\d+)?)?(Z|(\+|-)([01][0-9]|2[0-3])((:[0-5][0-9]([\.,]\d+)?)(:[0-5][0-9]([\.,]\d+)?)?)?)?)?$')"
+            >Warning: End of range '<sch:value-of select="$dateTime2"/>' suspect value, please
+            verify.</sch:assert>
+          <sch:assert role="warning" test="not(matches($dateTime2, '^-0+$'))">Warning: End of range
+              '<sch:value-of select="$dateTime2"/>' suspect value, please verify.</sch:assert>
+          <sch:assert role="warning"
+            test="not(matches($dateTime1, '^$') and matches($dateTime2, '^$'))">Warning: start and
+            end both unknown, please verify.</sch:assert>
+          <sch:assert role="warning"
+            test="not(matches($dateTime1, '^\.\.$') and matches($dateTime2, '^\.\.$'))">Warning:
+            start and end both open, please verify.</sch:assert>
+          <sch:assert role="warning"
+            test="not(matches($dateTime1, '^$') and matches($dateTime2, '^\.\.$'))">Warning: start
+            unknown and end open, please verify.</sch:assert>
+          <sch:assert role="warning"
+            test="not(matches($dateTime1, '^\.\.$') and matches($dateTime2, '^$'))">Warning: start
+            open and end unknown, please verify.</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- dcterms:identifier cannot contain a space character -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="dcterms:identifier">
+          <sch:assert test="matches(normalize-space(.), '^[^ ]+$')"><sch:name/> cannot contain space
+            characters.</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- dcterms:rights, edm:preview, and edm:isShownAt must contain an absolute URI -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="dcterms:rights | edm:preview | edm:isShownAt">
+          <sch:assert test="matches(normalize-space(.), '^([a-z]+://)')">Invalid absolute URI;
+            <sch:name/> must match the pattern "^([a-z]+://)".</sch:assert>
+          <!-- Regex can be read as "one or more alphabetic characters, followed by a colon and two slashes." -->
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- dcterms:type must match one of the enumerated values -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="dcterms:type">
+          <sch:assert
+            test="
+              matches(normalize-space(.),
+              '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text)$', 'i')"
+              >"<sch:value-of select="."/>" not permitted; <sch:name/> must match "Collection,
+            Dataset, Event, Image, Interactive Resource, Moving Image, Physical Object, Service,
+            Software, Sound, Still Image, or Text"</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
+
+  <!-- dcterms:language required when dcterms:type matches "Text" -->
+  <xs:annotation>
+    <xs:appinfo>
+      <sch:pattern>
+        <sch:rule context="dcterms:type[matches(., 'Text', 'i')]">
+          <sch:assert test="../dcterms:language">dcterms:language is required when <sch:name/>
+            matches "Text".</sch:assert>
+        </sch:rule>
+      </sch:pattern>
+    </xs:appinfo>
+  </xs:annotation>
 
 </xs:schema>
