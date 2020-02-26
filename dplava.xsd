@@ -2,9 +2,9 @@
 <?xml-model href="percent.xsd" type="application/xml" 
             schematypens="http://purl.oclc.org/dsdl/schematron"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://dplava.lib.virginia.edu"
-  xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"
-  xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:edm="http://www.europeana.eu/schemas/edm/"
+  targetNamespace="http://dplava.lib.virginia.edu" xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:dcterms="http://purl.org/dc/terms/" xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+  xmlns:edm="http://www.europeana.eu/schemas/edm/" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   elementFormDefault="qualified" attributeFormDefault="unqualified">
 
   <xs:import namespace="http://purl.org/dc/terms/" schemaLocation="dcterms.xsd"/>
@@ -14,11 +14,11 @@
   <xs:element name="mdRecord">
     <xs:complexType>
       <xs:annotation>
-        <xs:documentation xml:lang="en"> The mdRecord element may contain any dcterms field as well
-          as two custom URI fields that a roughly equivalent to Europeana's isShownAt and "preview"
-          elements. </xs:documentation>
+        <xs:documentation xml:lang="en">The mdRecord element may contain any dcterms field as well
+          as two custom URI fields that are roughly equivalent to Europeana's "isShownAt" and
+          "preview" elements.</xs:documentation>
+
         <xs:appinfo>
-          
           <!-- Check DPLA requirements for mdRecord -->
           <sch:ns prefix="dcterms" uri="http://purl.org/dc/terms/"/>
           <sch:ns prefix="dc" uri="http://purl.org/dc/elements/1.1/"/>
@@ -33,10 +33,11 @@
                 required.</sch:assert>
               <sch:assert test="*:preview">At least one edm:preview element is
                 required.</sch:assert>
-              <sch:assert test="count(*:identifier) = 1">Exactly one identifier element is required</sch:assert>
+              <sch:assert test="count(*:identifier) = 1">Exactly one identifier element is
+                required</sch:assert>
             </sch:rule>
           </sch:pattern>
-          
+
           <!-- Descriptive elements must have textual content -->
           <sch:pattern>
             <sch:rule context="dcterms:* | edm:*">
@@ -44,11 +45,535 @@
                 content.</sch:assert>
             </sch:rule>
           </sch:pattern>
-          
-          <!-- dcterms:created should comply with level 1 of the Extend Date Time Format (EDTF). -->
+
+          <!-- dcterms:created should comply with the Extend Date Time Format (EDTF). -->
           <!-- See http://www.loc.gov/standards/datetime/ISO_DIS%208601-2.pdf for format details. -->
-          <!-- Some MARC values are also allowed to facilitate conversion from existing MARC records. -->
-          
+          <sch:pattern>
+            <!-- *:created contains a date set -->
+            <sch:rule
+              context="dcterms:created[matches(., '^\[[^\]]+\]$') or matches(., '^\{[^\}]+\}$')]">
+              <sch:let name="dateSet"
+                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
+              <sch:report role="warning"
+                test="
+                  matches($dateSet, '&#32;') or matches($dateSet, '[\.]{3}') or
+                  matches($dateSet, '[,]{2}') or matches($dateSet, ',\.\.?') or matches($dateSet, '\.\.?,') or
+                  matches($dateSet, '^,') or matches($dateSet, ',$') or
+                  matches($dateSet, '\.\.[^,]*?\.\.')"
+                >Date sets containing spaces, more than 2 successive dots, more than 1 successive
+                commas, adjoining dots and commas, commas at beginning or end of the expression,
+                dots at beginning and end of the expression without an intervening comma, and
+                successive dots without an intervening comma are invalid.</sch:report>
+              <sch:report role="warning" test="not(matches($dateSet, ',|\.\.'))">Date sets must
+                contain either "," or "..".</sch:report>
+            </sch:rule>
+
+            <!-- *:created contains a date range -->
+            <sch:rule context="dcterms:created[matches(., '/')]">
+              <sch:let name="dateString" value="replace(., '\s', '')"/>
+              <sch:report role="warning" test="matches($dateString, '/.*/')">Warning: Too many
+                slashes.</sch:report>
+              <sch:let name="startDate"
+                value="substring-before(replace(replace(., '\s', ''), '/+', '/'), '/')"/>
+              <sch:let name="endDate"
+                value="substring-after(replace(replace(., '\s', ''), '/+', '/'), '/')"/>
+              <sch:report role="warning"
+                test="(matches($startDate, '^\.\.$') or matches($startDate, '^$')) and (matches($endDate, '^\.\.$') or matches($endDate, '^$'))"
+                >Warning: Both start and end open ('..') or unknown ('').</sch:report>
+              <sch:assert role="warning"
+                test="
+                  matches($startDate, '^\.\.$') or matches($startDate, '^$') or
+                  matches($startDate, '^$') or
+                  matches($startDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches($startDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches($startDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches($startDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches($startDate, '^-?([1-9]\d{0,3})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  
+                  matches($startDate, '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches($startDate, '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches($startDate, '^Y-?[1-9]\d*E[1-9]\d*(S[1-9]\d*)?$') or
+                  matches($startDate, '^Y-?[1-9]\d{4,}(S[1-9]\d*)?$') or
+                  
+                  matches($startDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,}|Y[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  
+                  matches($startDate, '^-?([1-9]\d{0,3})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches($startDate, '^-?([1-9]\d{0,3})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches($startDate, '^-?([1-9]\d{0,3})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  
+                  matches($startDate, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches($startDate, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches($startDate, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches($startDate, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(01|03|05|07|08|10|12)(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$') or
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(04|06|09|11)(-(0[1-9]|[1-2][0-9]|3[0]))?)?$') or
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(02)(-(0[1-9]|[1-2][0-9]))?)?$') or
+                  
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(01|03|05|07|08|10|12)(-(0[1-9X]|[1-2][0-9X]|3[0-1X]|X\d|XX))?)?$') or
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(04|06|09|11)(-(0[1-9X]|[1-2][0-9X]|3[0X]|X\d|XX))?)?$') or
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
+                  
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
+                  
+                  matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
+                >Warning: Start date contains suspect value.</sch:assert>
+              <sch:report role="warning" test="matches($startDate, '^-?0+$')">Warning: Start date
+                contains suspect value.</sch:report>
+              <sch:assert role="warning"
+                test="
+                  matches($endDate, '^\.\.$') or matches($endDate, '^$') or
+                  matches($endDate, '^$') or
+                  matches($endDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches($endDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches($endDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches($endDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches($endDate, '^-?([1-9]\d{0,3})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  
+                  matches($endDate, '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches($endDate, '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches($endDate, '^Y-?[1-9]\d*E[1-9]\d*(S[1-9]\d*)?$') or
+                  matches($endDate, '^Y-?[1-9]\d{4,}(S[1-9]\d*)?$') or
+                  
+                  matches($endDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,}|Y[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  
+                  matches($endDate, '^-?([1-9]\d{0,3})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches($endDate, '^-?([1-9]\d{0,3})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches($endDate, '^-?([1-9]\d{0,3})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  
+                  matches($endDate, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches($endDate, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches($endDate, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches($endDate, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(01|03|05|07|08|10|12)(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$') or
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(04|06|09|11)(-(0[1-9]|[1-2][0-9]|3[0]))?)?$') or
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(02)(-(0[1-9]|[1-2][0-9]))?)?$') or
+                  
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(01|03|05|07|08|10|12)(-(0[1-9X]|[1-2][0-9X]|3[0-1X]|X\d|XX))?)?$') or
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(04|06|09|11)(-(0[1-9X]|[1-2][0-9X]|3[0X]|X\d|XX))?)?$') or
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
+                  
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
+                  
+                  matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
+                >Warning: End date contains suspect value.</sch:assert>
+              <sch:report role="warning" test="matches($endDate, '^-?0+$')">Warning: End date
+                contains suspect value.</sch:report>
+
+              <sch:let name="cmpStart">
+                <xsl:choose>
+                  <xsl:when test="matches($startDate, 'E')">
+                    <xsl:variable name="expression">
+                      <xsl:value-of select="replace(replace($startDate, 'S\d+', ''), 'Y', '')"/>
+                    </xsl:variable>
+                    <xsl:choose>
+                      <xsl:when test="matches($startDate, 'S')">
+                        <xsl:variable name="signifDigits">
+                          <xsl:value-of select="substring-after($startDate, 'S')"/>
+                        </xsl:variable>
+                        <xsl:variable name="significand">
+                          <xsl:value-of
+                            select="substring-before(replace($expression, '-', ''), 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="sign">
+                          <xsl:if test="matches($expression, '-')">
+                            <xsl:text>-</xsl:text>
+                          </xsl:if>
+                        </xsl:variable>
+                        <xsl:variable name="exponent">
+                          <xsl:value-of select="substring-after($expression, 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="significandLength">
+                          <xsl:value-of select="string-length(replace($significand, '-', ''))"/>
+                        </xsl:variable>
+                        <xsl:value-of
+                          select="number(concat($sign, concat(substring(concat(substring($significand, 1, $signifDigits), '0000000000'), 1, $significandLength), 'E', $exponent)))"
+                        />
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:variable name="significand">
+                          <xsl:value-of
+                            select="substring-before(replace($expression, '-', ''), 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="sign">
+                          <xsl:if test="matches($expression, '-')">
+                            <xsl:text>-</xsl:text>
+                          </xsl:if>
+                        </xsl:variable>
+                        <xsl:variable name="exponent">
+                          <xsl:value-of select="substring-after($expression, 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="significandLength">
+                          <xsl:value-of select="string-length(replace($significand, '-', ''))"/>
+                        </xsl:variable>
+                        <xsl:value-of
+                          select="number(concat($sign, $significand, '0000000000E', $exponent))"/>
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </xsl:when>
+                  <xsl:when test="matches($startDate, 'Y')">
+                    <xsl:variable name="normalizeString">
+                      <xsl:if test="matches($startDate, '^-')">
+                        <xsl:text>-</xsl:text>
+                      </xsl:if>
+                      <xsl:value-of
+                        select="
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          substring-after($startDate, 'Y'), '[\+\-]\d{2}:\d{2}$', ''),
+                          '[~\?%]', ''),
+                          'S\d+', ''),
+                          '[T:\-\+]', '/'),
+                          'Z', ''),
+                          'X', '0'),
+                          '^/', '-')
+                          "/>
+                      <xsl:if test="not(matches($startDate, '[^\-]-'))">
+                        <xsl:text>/</xsl:text>
+                      </xsl:if>
+                    </xsl:variable>
+                    <xsl:variable name="year">
+                      <xsl:value-of
+                        select="replace(substring-before($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="remainder">
+                      <xsl:value-of
+                        select="replace(substring-after($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="datetimePart">
+                      <xsl:value-of select="replace($remainder, '\.\d+', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="fractionalSeconds">
+                      <xsl:value-of select="substring-after($remainder, '.')"/>
+                    </xsl:variable>
+                    <xsl:choose>
+                      <xsl:when test="string-length(replace($datetimePart, '^-', '')) &lt; 10">
+                        <xsl:value-of
+                          select="concat($year, substring(concat($datetimePart, '0000000000'), 1, 10), $fractionalSeconds)"
+                        />
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:value-of select="concat($year, $datetimePart, '.', $fractionalSeconds)"
+                        />
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </xsl:when>
+                  <xsl:when test="matches($startDate, '^$') or matches($startDate, '^\.\.$')">
+                    <xsl:value-of select="0"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:variable name="normalizeString">
+                      <xsl:value-of
+                        select="
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          $startDate, '[\+\-]\d{2}:\d{2}$', ''),
+                          '[~\?%]', ''),
+                          'S\d+', ''),
+                          '[T:\-\+]', '/'),
+                          'Z', ''),
+                          'X', '0'),
+                          '^/', '-')
+                          "/>
+                      <xsl:if test="not(matches($startDate, '[^\-]-'))">
+                        <xsl:text>/</xsl:text>
+                      </xsl:if>
+                    </xsl:variable>
+                    <xsl:variable name="year">
+                      <xsl:value-of
+                        select="replace(substring-before($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="remainder">
+                      <xsl:value-of
+                        select="replace(substring-after($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="datetimePart">
+                      <xsl:value-of select="replace($remainder, '\.\d+', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="fractionalSeconds">
+                      <xsl:value-of select="substring-after($remainder, '.')"/>
+                    </xsl:variable>
+                    <xsl:choose>
+                      <xsl:when test="string-length(replace($datetimePart, '^-', '')) &lt; 10">
+                        <xsl:value-of
+                          select="concat($year, substring(concat($datetimePart, '0000000000'), 1, 10), $fractionalSeconds)"
+                        />
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:value-of select="concat($year, $datetimePart, '.', $fractionalSeconds)"
+                        />
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </sch:let>
+              <sch:let name="cmpEnd">
+                <xsl:choose>
+                  <xsl:when test="matches($endDate, 'E')">
+                    <xsl:variable name="expression">
+                      <xsl:value-of select="replace(replace($endDate, 'S\d+', ''), 'Y', '')"/>
+                    </xsl:variable>
+                    <xsl:choose>
+                      <xsl:when test="matches($endDate, 'S')">
+                        <xsl:variable name="signifDigits">
+                          <xsl:value-of select="substring-after($endDate, 'S')"/>
+                        </xsl:variable>
+                        <xsl:variable name="significand">
+                          <xsl:value-of
+                            select="substring-before(replace($expression, '-', ''), 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="sign">
+                          <xsl:if test="matches($expression, '-')">
+                            <xsl:text>-</xsl:text>
+                          </xsl:if>
+                        </xsl:variable>
+                        <xsl:variable name="exponent">
+                          <xsl:value-of select="substring-after($expression, 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="significandLength">
+                          <xsl:value-of select="string-length(replace($significand, '-', ''))"/>
+                        </xsl:variable>
+                        <xsl:value-of
+                          select="number(concat($sign, concat(substring(concat(substring($significand, 1, $signifDigits), '0000000000'), 1, $significandLength), 'E', $exponent)))"
+                        />
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:variable name="significand">
+                          <xsl:value-of
+                            select="substring-before(replace($expression, '-', ''), 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="sign">
+                          <xsl:if test="matches($expression, '-')">
+                            <xsl:text>-</xsl:text>
+                          </xsl:if>
+                        </xsl:variable>
+                        <xsl:variable name="exponent">
+                          <xsl:value-of select="substring-after($expression, 'E')"/>
+                        </xsl:variable>
+                        <xsl:variable name="significandLength">
+                          <xsl:value-of select="string-length(replace($significand, '-', ''))"/>
+                        </xsl:variable>
+                        <xsl:value-of
+                          select="number(concat($sign, $significand, '0000000000E', $exponent))"/>
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </xsl:when>
+                  <xsl:when test="matches($endDate, 'Y')">
+                    <xsl:variable name="normalizeString">
+                      <xsl:if test="matches($endDate, '^-')">
+                        <xsl:text>-</xsl:text>
+                      </xsl:if>
+                      <xsl:value-of
+                        select="
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          substring-after($endDate, 'Y'), '[\+\-]\d{2}:\d{2}$', ''),
+                          '[~\?%]', ''),
+                          'S\d+', ''),
+                          '[T:\-\+]', '/'),
+                          'Z', ''),
+                          'X', '9'),
+                          '^/', '-')
+                          "/>
+                      <xsl:if test="not(matches($endDate, '[^\-]-'))">
+                        <xsl:text>/</xsl:text>
+                      </xsl:if>
+                    </xsl:variable>
+                    <xsl:variable name="year">
+                      <xsl:value-of
+                        select="replace(substring-before($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="remainder">
+                      <xsl:value-of
+                        select="replace(substring-after($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="datetimePart">
+                      <xsl:value-of select="replace($remainder, '\.\d+', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="fractionalSeconds">
+                      <xsl:value-of select="substring-after($remainder, '.')"/>
+                    </xsl:variable>
+                    <xsl:choose>
+                      <xsl:when test="string-length(replace($datetimePart, '^-', '')) &lt; 10">
+                        <xsl:value-of
+                          select="concat($year, substring(concat($datetimePart, '0000000000'), 1, 10), $fractionalSeconds)"
+                        />
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:value-of select="concat($year, $datetimePart, '.', $fractionalSeconds)"
+                        />
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </xsl:when>
+                  <xsl:when test="matches($endDate, '^$') or matches($endDate, '^\.\.$')">
+                    <xsl:value-of select="0"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:variable name="normalizeString">
+                      <xsl:value-of
+                        select="
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          replace(
+                          $endDate, '[\+\-]\d{2}:\d{2}$', ''),
+                          '[~\?%]', ''),
+                          'S\d+', ''),
+                          '[T:\-\+]', '/'),
+                          'Z', ''),
+                          'X', '9'),
+                          '^/', '-')
+                          "/>
+                      <xsl:if test="not(matches($endDate, '[^\-]-'))">
+                        <xsl:text>/</xsl:text>
+                      </xsl:if>
+                    </xsl:variable>
+                    <xsl:variable name="year">
+                      <xsl:value-of
+                        select="replace(substring-before($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="remainder">
+                      <xsl:value-of
+                        select="replace(substring-after($normalizeString, '/'), '/', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="datetimePart">
+                      <xsl:value-of select="replace($remainder, '\.\d+', '')"/>
+                    </xsl:variable>
+                    <xsl:variable name="fractionalSeconds">
+                      <xsl:value-of select="substring-after($remainder, '.')"/>
+                    </xsl:variable>
+                    <xsl:choose>
+                      <xsl:when test="string-length(replace($datetimePart, '^-', '')) &lt; 10">
+                        <xsl:value-of
+                          select="concat($year, substring(concat($datetimePart, '0000000000'), 1, 10), $fractionalSeconds)"
+                        />
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:value-of select="concat($year, $datetimePart, '.', $fractionalSeconds)"
+                        />
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </sch:let>
+
+              <sch:report role="warning"
+                test="
+                  not(matches($startDate, '^\.\.$|^$')) and
+                  not(matches($endDate, '^\.\.$|^$')) and
+                  number($cmpEnd) &lt; number($cmpStart)">
+                <sch:value-of
+                  select="concat('Range start (&quot;', replace($startDate, '[~\?%]', ''), '&quot;) later than range end (&quot;', replace($endDate, '[~\?%]', ''), '&quot;)')"
+                />
+              </sch:report>
+
+            </sch:rule>
+
+            <!-- *:created is a single date. -->
+            <sch:rule
+              context="dcterms:created[not(matches(., '/')) and not(matches(., '^\[[^\]]+\]$')) and not(matches(., '^\{[^\}]+\}$'))]">
+              <sch:let name="dateString" value="replace(., '\s', '')"/>
+
+              <sch:assert role="warning"
+                test="
+                  matches($dateString, '^undated$', 'i') or
+                  matches($dateString, '^$') or
+                  matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches($dateString, '^-?([1-9]\d{0,3})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  
+                  matches($dateString, '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches($dateString, '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches($dateString, '^Y-?[1-9]\d*E[1-9]\d*(S[1-9]\d*)?$') or
+                  matches($dateString, '^Y-?[1-9]\d{4,}(S[1-9]\d*)?$') or
+                  
+                  matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,}|Y[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  
+                  matches($dateString, '^-?([1-9]\d{0,3})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches($dateString, '^-?([1-9]\d{0,3})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches($dateString, '^-?([1-9]\d{0,3})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  
+                  matches($dateString, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches($dateString, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches($dateString, '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches($dateString, '^(Y-?[1-9]\d{4,})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(01|03|05|07|08|10|12)(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$') or
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(04|06|09|11)(-(0[1-9]|[1-2][0-9]|3[0]))?)?$') or
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(02)(-(0[1-9]|[1-2][0-9]))?)?$') or
+                  
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(01|03|05|07|08|10|12)(-(0[1-9X]|[1-2][0-9X]|3[0-1X]|X\d|XX))?)?$') or
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(04|06|09|11)(-(0[1-9X]|[1-2][0-9X]|3[0X]|X\d|XX))?)?$') or
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
+                  
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
+                  
+                  matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
+                >Warning: Suspect value.</sch:assert>
+              <sch:report role="warning" test="matches($dateString, '^-?0+$')">Warning: Suspect
+                value.</sch:report>
+            </sch:rule>
+          </sch:pattern>
 
           <!-- edm:preview, and edm:isShownAt must contain an absolute URI -->
           <sch:pattern>
@@ -66,24 +591,28 @@
                 test="
                   matches(normalize-space(.),
                   '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text)$', 'i')"
-                >DCMI Type Vocabulary values "Collection, Dataset, Event, Image, Interactive Resource,
-                Moving Image, Physical Object, Service, Software, Sound, Still Image, Text" strongly recommended.</sch:assert>
+                >DCMI Type Vocabulary values "Collection, Dataset, Event, Image, Interactive
+                Resource, Moving Image, Physical Object, Service, Software, Sound, Still Image,
+                Text" strongly recommended.</sch:assert>
             </sch:rule>
           </sch:pattern>
-          
+
           <!-- dcterms:rights must match one of the enumerated values -->
           <sch:pattern>
             <sch:rule context="*:rights">
-              <sch:assert test="matches(normalize-space(.),
-                '^(http://rightsstatements.org/vocab/InC/1.0/|http://rightsstatements.org/vocab/InC-OW-EU/1.0/|http://rightsstatements.org/vocab/InC-EDU/1.0/|http://rightsstatements.org/vocab/InC-NC/1.0/|http://rightsstatements.org/vocab/InC-RUU/1.0/|http://rightsstatements.org/vocab/NoC-CR/1.0/|http://rightsstatements.org/vocab/NoC-NC/1.0/|http://rightsstatements.org/vocab/NoC-OKLR/1.0/|http://rightsstatements.org/vocab/NoC-US/1.0/|http://rightsstatements.org/vocab/CNE/1.0/|http://rightsstatements.org/vocab/UND/1.0/|http://rightsstatements.org/vocab/NKC/1.0/)$', 'i')"
+              <sch:assert
+                test="
+                  matches(normalize-space(.),
+                  '^(http://rightsstatements.org/vocab/InC/1.0/|http://rightsstatements.org/vocab/InC-OW-EU/1.0/|http://rightsstatements.org/vocab/InC-EDU/1.0/|http://rightsstatements.org/vocab/InC-NC/1.0/|http://rightsstatements.org/vocab/InC-RUU/1.0/|http://rightsstatements.org/vocab/NoC-CR/1.0/|http://rightsstatements.org/vocab/NoC-NC/1.0/|http://rightsstatements.org/vocab/NoC-OKLR/1.0/|http://rightsstatements.org/vocab/NoC-US/1.0/|http://rightsstatements.org/vocab/CNE/1.0/|http://rightsstatements.org/vocab/UND/1.0/|http://rightsstatements.org/vocab/NKC/1.0/)$', 'i')"
                 >Valid RightsStatement.org URI required.</sch:assert>
             </sch:rule>
           </sch:pattern>
-          
+
           <!-- No empty attribute values permitted -->
           <sch:pattern>
             <sch:rule context="//@*">
-              <sch:assert test="normalize-space(.) != ''">No empty attribute values permitted</sch:assert>
+              <sch:assert test="normalize-space(.) != ''">No empty attribute values
+                permitted</sch:assert>
             </sch:rule>
           </sch:pattern>
 
