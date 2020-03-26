@@ -51,9 +51,9 @@
           <sch:pattern>
             <!-- *:created contains a date set -->
             <sch:rule
-              context="dcterms:created[matches(., '^\[[^\]]+\]$') or matches(., '^\{[^\}]+\}$')]">
+              context="dcterms:created[matches(., '^\[[^\]]+\]$') or matches(., '^{{[^}}]+}}$')]">
               <sch:let name="dateSet"
-                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
+                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '{{', ''), '}}', '')"/>
               <sch:report role="warning"
                 test="
                   matches($dateSet, '&#32;') or matches($dateSet, '[\.]{3}') or
@@ -516,7 +516,7 @@
 
             <!-- *:created is a single date. -->
             <sch:rule
-              context="dcterms:created[not(matches(., '/')) and not(matches(., '^\[[^\]]+\]$')) and not(matches(., '^\{[^\}]+\}$'))]">
+              context="dcterms:created[not(matches(., '/')) and not(matches(., '^\[[^\]]+\]$')) and not(matches(., '^{{[^}}]+}}$'))]">
               <sch:let name="dateString" value="replace(., '\s', '')"/>
 
               <sch:assert role="warning"
