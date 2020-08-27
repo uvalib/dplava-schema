@@ -66,6 +66,58 @@
                 successive dots without an intervening comma are invalid.</sch:report>
               <sch:report role="warning" test="not(matches($dateSet, ',|\.\.'))">Date sets must
                 contain either "," or "..".</sch:report>
+              <sch:let name="singleDates">
+                <xsl:analyze-string select="$dateSet" regex="(,|\.\.)">
+                  <xsl:non-matching-substring>
+                    <date>
+                      <xsl:value-of select="."/>
+                    </date>
+                  </xsl:non-matching-substring>
+                </xsl:analyze-string>
+              </sch:let>
+              <sch:report role="warning"
+                test="
+                  $singleDates/*:date[not(matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches(., '^-?([1-9]\d{0,3})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(21|22|23|24))?(~|\?|%)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
+                  matches(., '^(Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100}|Y-?[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(02)(-(0[1-9]|[1-2]\d|XX))?)?(~|\?|%)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})-(((01|03|05|07|08|10|12)-(0[1-9]|[1-2]\d|3[0-1]))|((04|06|09|11)(-(0[1-9]|[1-2]\d|30))|((02)(-(0[1-9]|[1-2]\d)))))(T([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d|60)([\.,]\d+)?)?(Z|(\+|-)([01]\d|2[0-3])((:[0-5]\d)(:[0-5]\d([\.,]\d+)?)?)?)?)?(~|\?|%)?$') or
+                  matches(., '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches(., '^-?[1-9]\d{0,3}(S[1-9]\d*)?$') or
+                  matches(., '^Y-?[1-9]\d*E[1-9]\d*(S[1-9]\d*)?$') or
+                  matches(., '^Y-?[1-9]\d{4,100}(S[1-9]\d*)?$') or
+                  matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100}|Y[1-9]\d{3}X|Y-?[1-9]\d{2}XX+|Y-?[1-9]\dXXX+)(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  matches(., '^-?([1-9]\d{0,3})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches(., '^-?([1-9]\d{0,3})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches(., '^-?([1-9]\d{0,3})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})(~|\?|%)?(-(01|03|05|07|08|10|12)(~|\?|%)?(-(0[1-9]|[1-2]\d|3[0-1])(~|\?|%)?)?)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})(~|\?|%)?(-(04|06|09|11)(~|\?|%)?(-(0[1-9]|[1-2]\d|30)(~|\?|%)?)?)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})(~|\?|%)?(-(02)(~|\?|%)?(-(0[1-9]|[1-2]\d)(~|\?|%)?)?)?$') or
+                  matches(., '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches(., '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches(., '^-?(~|\?|%)?([1-9]\d{0,3})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})(-(~|\?|%)?(01|03|05|07|08|10|12)(-(~|\?|%)?(0[1-9]|[1-2]\d|3[0-1]))?)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})(-(~|\?|%)?(04|06|09|11)(-(~|\?|%)?(0[1-9]|[1-2]\d|30))?)?$') or
+                  matches(., '^(Y-?[1-9]\d{4,100})(-(~|\?|%)?(02)(-(~|\?|%)?(0[1-9]|[1-2]\d))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(~|\?|%)?(2[1-9]|3\d|4[0-1]))?(~|\?|%)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(01|03|05|07|08|10|12)(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(04|06|09|11)(-(0[1-9]|[1-2][0-9]|3[0]))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(02)(-(0[1-9]|[1-2][0-9]))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(01|03|05|07|08|10|12)(-(0[1-9X]|[1-2][0-9X]|3[0-1X]|X\d|XX))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(04|06|09|11)(-(0[1-9X]|[1-2][0-9X]|3[0X]|X\d|XX))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
+                  matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')
+                  )]"
+                >Warning: Suspect value.</sch:report>
+              <sch:report role="warning" test="$singleDates/*:date[matches(., '^-?0+$')]">Warning:
+                Suspect value.</sch:report>
             </sch:rule>
 
             <!-- *:created contains a date range -->
@@ -603,8 +655,8 @@
               <sch:assert
                 test="
                   matches(normalize-space(.),
-                  '^(http://rightsstatements.org/vocab/InC/1.0/|http://rightsstatements.org/vocab/InC-OW-EU/1.0/|http://rightsstatements.org/vocab/InC-EDU/1.0/|http://rightsstatements.org/vocab/InC-NC/1.0/|http://rightsstatements.org/vocab/InC-RUU/1.0/|http://rightsstatements.org/vocab/NoC-CR/1.0/|http://rightsstatements.org/vocab/NoC-NC/1.0/|http://rightsstatements.org/vocab/NoC-OKLR/1.0/|http://rightsstatements.org/vocab/NoC-US/1.0/|http://rightsstatements.org/vocab/CNE/1.0/|http://rightsstatements.org/vocab/UND/1.0/|http://rightsstatements.org/vocab/NKC/1.0/)$', 'i')"
-                >Valid RightsStatement.org URI required.</sch:assert>
+                  '^(https?://rightsstatements.org/vocab/InC/1.0/|https?://rightsstatements.org/vocab/InC-OW-EU/1.0/|https?://rightsstatements.org/vocab/InC-EDU/1.0/|https?://rightsstatements.org/vocab/InC-NC/1.0/|https?://rightsstatements.org/vocab/InC-RUU/1.0/|https?://rightsstatements.org/vocab/NoC-CR/1.0/|https?://rightsstatements.org/vocab/NoC-NC/1.0/|https?://rightsstatements.org/vocab/NoC-OKLR/1.0/|https?://rightsstatements.org/vocab/NoC-US/1.0/|https?://rightsstatements.org/vocab/CNE/1.0/|https?://rightsstatements.org/vocab/UND/1.0/|https?://rightsstatements.org/vocab/NKC/1.0/|https?://creativecommons.org/licenses/by/4.0/legalcode|https?://creativecommons.org/licenses/by-sa/4.0/legalcode|https?://creativecommons.org/licenses/by-nd/4.0/legalcode|https?://creativecommons.org/licenses/by-nc/4.0/legalcode|https?://creativecommons.org/licenses/by-nc-sa/4.0/legalcode|https?://creativecommons.org/licenses/by-nc-nd/4.0/legalcode)$', 'i')"
+                >Valid RightsStatement.org or Creative Commons URI required.</sch:assert>
             </sch:rule>
           </sch:pattern>
 
