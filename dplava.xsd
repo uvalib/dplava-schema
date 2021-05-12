@@ -51,9 +51,9 @@
           <sch:pattern>
             <!-- *:created contains a date set -->
             <sch:rule
-              context="dcterms:created[matches(., '^\[[^\]]+\]$') or matches(., '^\{[^\}]+\}$')]">
+              context="dcterms:created[matches(., '[') or matches(., '{{')]">
               <sch:let name="dateSet"
-                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
+                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '{{', ''), '}}', '')"/>
               <sch:report role="warning"
                 test="
                   matches($dateSet, '&#32;') or matches($dateSet, '[\.]{3}') or
@@ -568,12 +568,13 @@
 
             <!-- *:created is a single date. -->
             <sch:rule
-              context="dcterms:created[not(matches(., '/')) and not(matches(., '^\[[^\]]+\]$')) and not(matches(., '^\{[^\}]+\}$'))]">
+              context="dcterms:created[not(matches(., '/')) and not(matches(., '[')) and not(matches(., '{{'))]">
               <sch:let name="dateString" value="replace(., '\s', '')"/>
 
               <sch:assert role="warning"
-                test="              
-                  matches($dateString, '^undated$') or
+                test="
+                  matches($dateString, '^undated$', 'i') or
+                  matches($dateString, '^$') or
                   matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
                   matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
                   matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
@@ -620,9 +621,9 @@
                   matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   
                   matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
-                >Warning: Suspect value "<sch:value-of select="."/>".</sch:assert>
-                <sch:report role="warning" test="matches($dateString, '^-?0+$')">Warning: Suspect
-                value "<sch:value-of select="."/>".</sch:report>
+                >Warning: Suspect value.</sch:assert>
+              <sch:report role="warning" test="matches($dateString, '^-?0+$')">Warning: Suspect
+                value.</sch:report>
             </sch:rule>
           </sch:pattern>
 
@@ -654,7 +655,7 @@
               <sch:assert
                 test="
                   matches(normalize-space(.),
-                  '^(https?://rightsstatements.org/vocab/InC/1.0/|https?://rightsstatements.org/vocab/InC-OW-EU/1.0/|https?://rightsstatements.org/vocab/InC-EDU/1.0/|https?://rightsstatements.org/vocab/InC-NC/1.0/|https?://rightsstatements.org/vocab/InC-RUU/1.0/|https?://rightsstatements.org/vocab/NoC-CR/1.0/|https?://rightsstatements.org/vocab/NoC-NC/1.0/|https?://rightsstatements.org/vocab/NoC-OKLR/1.0/|https?://rightsstatements.org/vocab/NoC-US/1.0/|https?://rightsstatements.org/vocab/CNE/1.0/|https?://rightsstatements.org/vocab/UND/1.0/|https?://rightsstatements.org/vocab/NKC/1.0/|https?://creativecommons.org/licenses/by/4.0/|https?://creativecommons.org/licenses/by-sa/4.0/|https?://creativecommons.org/licenses/by-nd/4.0/|https?://creativecommons.org/licenses/by-nc/4.0/|https?://creativecommons.org/licenses/by-nc-sa/4.0/|https?://creativecommons.org/licenses/by-nc-nd/4.0/)$', 'i')"
+                  '^(https?://rightsstatements.org/vocab/InC/1.0/|https?://rightsstatements.org/vocab/InC-OW-EU/1.0/|https?://rightsstatements.org/vocab/InC-EDU/1.0/|https?://rightsstatements.org/vocab/InC-NC/1.0/|https?://rightsstatements.org/vocab/InC-RUU/1.0/|https?://rightsstatements.org/vocab/NoC-CR/1.0/|https?://rightsstatements.org/vocab/NoC-NC/1.0/|https?://rightsstatements.org/vocab/NoC-OKLR/1.0/|https?://rightsstatements.org/vocab/NoC-US/1.0/|https?://rightsstatements.org/vocab/CNE/1.0/|https?://rightsstatements.org/vocab/UND/1.0/|https?://rightsstatements.org/vocab/NKC/1.0/|https?://creativecommons.org/licenses/by/4.0/legalcode|https?://creativecommons.org/licenses/by-sa/4.0/legalcode|https?://creativecommons.org/licenses/by-nd/4.0/legalcode|https?://creativecommons.org/licenses/by-nc/4.0/legalcode|https?://creativecommons.org/licenses/by-nc-sa/4.0/legalcode|https?://creativecommons.org/licenses/by-nc-nd/4.0/legalcode)$', 'i')"
                 >Valid RightsStatement.org or Creative Commons URI required.</sch:assert>
             </sch:rule>
           </sch:pattern>
