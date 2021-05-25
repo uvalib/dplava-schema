@@ -568,7 +568,7 @@
 
             <!-- *:created is a single date. -->
             <sch:rule
-              context="dcterms:created[not(matches(., '/')) and not(matches(., '\[')) and not(matches(., '\{'))]">
+              context="dcterms:created[not(contains(., '/')) and not(contains(., '\[')) and not(contains(., '{{'))]">
               <sch:let name="dateString" value="replace(., '\s', '')"/>
 
               <sch:assert role="warning"
