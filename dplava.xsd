@@ -53,7 +53,7 @@
             <sch:rule
               context="dcterms:created[not(contains(., '/')) and not(contains(., '\[')) and not(contains(., '{{'))]">
               <sch:let name="dateSet"
-                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '{{', ''), '}}', '')"/>
+                value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
               <sch:report role="warning"
                 test="
                   matches($dateSet, '&#32;') or matches($dateSet, '[\.]{3}') or
