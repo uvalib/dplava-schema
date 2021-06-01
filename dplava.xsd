@@ -51,7 +51,7 @@
           <sch:pattern>
             <!-- *:created contains a date set -->
             <sch:rule
-              context="dcterms:created[matches(., '\[') or matches(., '\{')]">
+              context="dcterms:created[not(contains(., '/')) and not(contains(., '\[')) and not(contains(., '{{'))]">
               <sch:let name="dateSet"
                 value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '{{', ''), '}}', '')"/>
               <sch:report role="warning"
