@@ -50,22 +50,19 @@
           <!-- See http://www.loc.gov/standards/datetime/ISO_DIS%208601-2.pdf for format details. -->
           <sch:pattern>
             <!-- *:created contains a date set -->
-            <sch:rule
-              context="dcterms:created[contains(., '\[') or contains(., '{{')]">
+            <sch:rule context="dcterms:created[contains(., '[') or contains(., '{')]">
               <sch:let name="dateSet"
                 value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
-              <sch:report role="warning"
-                test="
+              <sch:report role="warning" test="
                   matches($dateSet, '&#32;') or matches($dateSet, '[\.]{3}') or
                   matches($dateSet, '[,]{2}') or matches($dateSet, ',\.\.?') or matches($dateSet, '\.\.?,') or
                   matches($dateSet, '^,') or matches($dateSet, ',$') or
-                  matches($dateSet, '\.\.[^,]*?\.\.')"
-                >Date sets containing spaces, more than 2 successive dots, more than 1 successive
-                commas, adjoining dots and commas, commas at beginning or end of the expression,
-                dots at beginning and end of the expression without an intervening comma, and
-                successive dots without an intervening comma are invalid.</sch:report>
-              <sch:report role="warning" test="not(matches($dateSet, ',|\.\.'))">Date sets must
-                contain either "," or "..".</sch:report>
+                  matches($dateSet, '\.\.[^,]*?\.\.') or not(matches($dateSet, ',|\.\.'))"
+                >A date set must contain either "," or "..". Date sets containing spaces, more than
+                2 successive dots, more than 1 successive comma, adjoining dots and commas, commas
+                at beginning or end of the expression, dots at beginning and end of the expression
+                without an intervening comma, and successive dots without an intervening comma are
+                invalid.</sch:report>
               <sch:let name="singleDates">
                 <xsl:analyze-string select="$dateSet" regex="(,|\.\.)">
                   <xsl:non-matching-substring>
@@ -75,8 +72,7 @@
                   </xsl:non-matching-substring>
                 </xsl:analyze-string>
               </sch:let>
-              <sch:report role="warning"
-                test="
+              <sch:report role="warning" test="
                   $singleDates/*:date[not(matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
                   matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(01|03|05|07|08|10|12|XX)(-(0[1-9]|[1-2]\d|3[0-1]|XX))?)?(~|\?|%)?$') or
                   matches(., '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(04|06|09|11)(-(0[1-9]|[1-2]\d|30|XX))?)?(~|\?|%)?$') or
@@ -114,8 +110,7 @@
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')
-                  )]"
-                >Warning: Suspect value.</sch:report>
+                  )]">Warning: Suspect value.</sch:report>
               <sch:report role="warning" test="$singleDates/*:date[matches(., '^-?0+$')]">Warning:
                 Suspect value.</sch:report>
             </sch:rule>
@@ -132,8 +127,7 @@
               <sch:report role="warning"
                 test="(matches($startDate, '^\.\.$') or matches($startDate, '^$')) and (matches($endDate, '^\.\.$') or matches($endDate, '^$'))"
                 >Warning: Both start and end open ('..') or unknown ('').</sch:report>
-              <sch:assert role="warning"
-                test="
+              <sch:assert role="warning" test="
                   matches($startDate, '^\.\.$') or matches($startDate, '^$') or
                   matches($startDate, '^$') or
                   matches($startDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
@@ -185,8 +179,7 @@
                 >Warning: Start date contains suspect value.</sch:assert>
               <sch:report role="warning" test="matches($startDate, '^-?0+$')">Warning: Start date
                 contains suspect value.</sch:report>
-              <sch:assert role="warning"
-                test="
+              <sch:assert role="warning" test="
                   matches($endDate, '^\.\.$') or matches($endDate, '^$') or
                   matches($endDate, '^$') or
                   matches($endDate, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
@@ -295,8 +288,7 @@
                       <xsl:if test="matches($startDate, '^-')">
                         <xsl:text>-</xsl:text>
                       </xsl:if>
-                      <xsl:value-of
-                        select="
+                      <xsl:value-of select="
                           replace(
                           replace(
                           replace(
@@ -347,8 +339,7 @@
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:variable name="normalizeString">
-                      <xsl:value-of
-                        select="
+                      <xsl:value-of select="
                           replace(
                           replace(
                           replace(
@@ -452,8 +443,7 @@
                       <xsl:if test="matches($endDate, '^-')">
                         <xsl:text>-</xsl:text>
                       </xsl:if>
-                      <xsl:value-of
-                        select="
+                      <xsl:value-of select="
                           replace(
                           replace(
                           replace(
@@ -504,8 +494,7 @@
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:variable name="normalizeString">
-                      <xsl:value-of
-                        select="
+                      <xsl:value-of select="
                           replace(
                           replace(
                           replace(
@@ -554,8 +543,7 @@
                 </xsl:choose>
               </sch:let>
 
-              <sch:report role="warning"
-                test="
+              <sch:report role="warning" test="
                   not(matches($startDate, '^\.\.$|^$')) and
                   not(matches($endDate, '^\.\.$|^$')) and
                   number($cmpEnd) &lt; number($cmpStart)">
@@ -571,8 +559,7 @@
               context="dcterms:created[not(contains(., '/')) and not(contains(., '\[')) and not(contains(., '{{'))]">
               <sch:let name="dateString" value="replace(., '\s', '')"/>
 
-              <sch:assert role="warning"
-                test="
+              <sch:assert role="warning" test="
                   matches($dateString, '^undated$', 'i') or
                   matches($dateString, '^$') or
                   matches($dateString, '^-?([1-9]X{0,3}|[1-9]\d{1}X{0,2}|[1-9]\d{2}X{0,1}|[1-9]\d{3})(-(21|22|23|24))?(~|\?|%)?$') or
@@ -639,8 +626,7 @@
           <!-- dcterms:type must match one of the enumerated values -->
           <sch:pattern>
             <sch:rule context="*:type">
-              <sch:assert role="warning"
-                test="
+              <sch:assert role="warning" test="
                   matches(normalize-space(.),
                   '^(Collection|Dataset|Event|Image|Interactive Resource|Moving Image|Physical Object|Service|Software|Sound|Still Image|Text)$', 'i')"
                 >DCMI Type Vocabulary values "Collection, Dataset, Event, Image, Interactive
@@ -652,8 +638,7 @@
           <!-- dcterms:rights must match one of the enumerated values -->
           <sch:pattern>
             <sch:rule context="*:rights">
-              <sch:assert
-                test="
+              <sch:assert test="
                   matches(normalize-space(.),
                   '^(https?://rightsstatements.org/vocab/InC/1.0/|https?://rightsstatements.org/vocab/InC-OW-EU/1.0/|https?://rightsstatements.org/vocab/InC-EDU/1.0/|https?://rightsstatements.org/vocab/InC-NC/1.0/|https?://rightsstatements.org/vocab/InC-RUU/1.0/|https?://rightsstatements.org/vocab/NoC-CR/1.0/|https?://rightsstatements.org/vocab/NoC-NC/1.0/|https?://rightsstatements.org/vocab/NoC-OKLR/1.0/|https?://rightsstatements.org/vocab/NoC-US/1.0/|https?://rightsstatements.org/vocab/CNE/1.0/|https?://rightsstatements.org/vocab/UND/1.0/|https?://rightsstatements.org/vocab/NKC/1.0/|https?://creativecommons.org/licenses/by/4.0/|https?://creativecommons.org/licenses/by-sa/4.0/|https?://creativecommons.org/licenses/by-nd/4.0/|https?://creativecommons.org/licenses/by-nc/4.0/|https?://creativecommons.org/licenses/by-nc-sa/4.0/|https?://creativecommons.org/licenses/by-nc-nd/4.0/)$', 'i')"
                 >Valid RightsStatement.org or Creative Commons URI required.</sch:assert>
