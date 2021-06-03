@@ -50,7 +50,7 @@
           <!-- See http://www.loc.gov/standards/datetime/ISO_DIS%208601-2.pdf for format details. -->
           <sch:pattern>
             <!-- *:created contains a date set -->
-            <sch:rule context="dcterms:created[starts-with(., '\[') or starts-with(., '\{')]">
+            <sch:rule context="dcterms:created[contains(., '[')]">
               <sch:let name="dateSet"
                 value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
               <sch:report role="warning" test="
@@ -110,9 +110,9 @@
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')
-                  )]">Warning: Suspect value.</sch:report>
+                  )]">Warning: Suspect value 1.</sch:report>
               <sch:report role="warning" test="$singleDates/*:date[matches(., '^-?0+$')]">Warning:
-                Suspect value.</sch:report>
+                Suspect value 2.</sch:report>
             </sch:rule>
 
             <!-- *:created contains a date range -->
@@ -556,7 +556,7 @@
 
             <!-- *:created is a single date. -->
             <sch:rule
-              context="dcterms:created[not(contains(., '/')) and not(contains(., '\[')) and not(contains(., '{{'))]">
+              context="dcterms:created[not(contains(., '/')) and not(contains(., '[')) and not(contains(., '{{'))]">
               <sch:let name="dateString" value="replace(., '\s', '')"/>
 
               <sch:assert role="warning" test="
