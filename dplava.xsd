@@ -50,7 +50,7 @@
           <!-- See http://www.loc.gov/standards/datetime/ISO_DIS%208601-2.pdf for format details. -->
           <sch:pattern>
             <!-- *:created contains a date set -->
-            <sch:rule context="dcterms:created[matches(., '\\[.*\\]') or matches(., '\\{.*\\}')]">
+            <sch:rule context="dcterms:created[matches(., '\x5B.*\x5D') or matches(., '\x7B.*\x7D')]">
               <sch:let name="dateSet"
                 value="replace(replace(replace(replace(., '\[', ''), '\]', ''), '\{', ''), '\}', '')"/>
               <sch:report role="warning" test="
