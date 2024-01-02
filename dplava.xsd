@@ -110,9 +110,9 @@
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(02)(-(0[1-9X]|[1-2][0-9X]|X\d|XX))?)?$') or
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   matches(., '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')
-                  )]">Warning: Suspect value</sch:report>
+                  )]">Warning: dcterms:created contains suspect value '<sch:value-of select="."/>'.</sch:report>
               <sch:report role="warning" test="$singleDates/*:date[matches(., '^-?0+$')]">Warning:
-                Suspect value</sch:report>
+                dcterms:created contains suspect value '<sch:value-of select="."/>'.</sch:report>
             </sch:rule>
 
             <!-- *:created contains a date range -->
@@ -176,9 +176,8 @@
                   matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   
                   matches($startDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
-                >Warning: Start date contains suspect value.</sch:assert>
-              <sch:report role="warning" test="matches($startDate, '^-?0+$')">Warning: Start date
-                contains suspect value.</sch:report>
+                >Warning: dcterms:created contains suspect start date value '<sch:value-of select="$startDate"/>'.</sch:assert>
+              <sch:report role="warning" test="matches($startDate, '^-?0+$')">Warning: dcterms:created contains suspect start date value '<sch:value-of select="$startDate"/>.</sch:report>
               <sch:assert role="warning" test="
                   matches($endDate, '^\.\.$') or matches($endDate, '^$') or
                   matches($endDate, '^$') or
@@ -228,9 +227,8 @@
                   matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   
                   matches($endDate, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
-                >Warning: End date contains suspect value.</sch:assert>
-              <sch:report role="warning" test="matches($endDate, '^-?0+$')">Warning: End date
-                contains suspect value.</sch:report>
+                >Warning: dcterms:created contains suspect end date value '<sch:value-of select="$endDate"/>'.</sch:assert>
+              <sch:report role="warning" test="matches($endDate, '^-?0+$')">Warning: dcterms:created contains suspect end date value '<sch:value-of select="$endDate"/>'.</sch:report>
 
               <sch:let name="cmpStart">
                 <xsl:choose>
@@ -608,9 +606,8 @@
                   matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123]\d)?)?$') or
                   
                   matches($dateString, '^(-?[\dX]{1,4}|Y-?[\dX]{5,100})(-(X[012]|[01]X)(-[0123X][\dX])?)?$')"
-                >Warning: Suspect value.</sch:assert>
-              <sch:report role="warning" test="matches($dateString, '^-?0+$')">Warning: Suspect
-                value.</sch:report>
+                >Warning: dcterms:created contains suspect value '<sch:value-of select="."/>'.</sch:assert>
+              <sch:report role="warning" test="matches($dateString, '^-?0+$')">Warning: dcterms:created contains suspect value '<sch:value-of select="."/>'.</sch:report>
             </sch:rule>
           </sch:pattern>
 
